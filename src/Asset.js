@@ -38,6 +38,8 @@ class Asset {
     this.parentBundle = null;
     this.bundles = new Set();
     this.cacheData = {};
+    this.startTime = 0;
+    this.endTime = 0;
     this.buildTime = 0;
     this.bundledSize = 0;
     this.resolver = new Resolver(options);

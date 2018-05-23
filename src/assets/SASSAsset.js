@@ -28,10 +28,8 @@ class SASSAsset extends Asset {
       path.dirname(this.name)
     );
     opts.data = opts.data ? opts.data + os.EOL + code : code;
-    opts.indentedSyntax =
-      typeof opts.indentedSyntax === 'boolean'
-        ? opts.indentedSyntax
-        : path.extname(this.name).toLowerCase() === '.sass';
+    let type = this.options.rendition ? this.options.rendition.type : path.extname(this.name).toLowerCase().replace('.','');
+    opts.indentedSyntax = typeof opts.indentedSyntax === 'boolean' ? opts.indentedSyntax : type === 'sass';
 
     opts.functions = Object.assign({}, opts.functions, {
       url: node => {
@@ -40,9 +38,16 @@ class SASSAsset extends Asset {
       }
     });
 
-    opts.importer = (url, prev, done) => {
+    opts.importer = opts.importer || [];
+    opts.importer = Array.isArray(opts.importer) ? opts.importer : [opts.importer];
+    opts.importer.push((url, prev, done) => {
       let resolved;
       try {
+        if (!/^(~|\.\/|\/)/.test(url)) {
+          url = './' + url;
+        } else if (!/^(~\/|\.\/|\/)/.test(url)) {
+          url = url.substring(1);
+        }
         resolved = syncPromise(
           resolver.resolve(url, prev === 'stdin' ? this.name : prev)
         ).path;
@@ -52,7 +57,7 @@ class SASSAsset extends Asset {
       return done({
         file: resolved
       });
-    };
+    });
 
     return await render(opts);
   }

@@ -324,6 +324,10 @@ class Bundler extends EventEmitter {
 
     if (this.options.watch) {
       this.watcher = new Watcher();
+      // Wait for ready event for reliable testing on watcher
+      if (process.env.NODE_ENV === 'test' && !this.watcher.ready) {
+        await new Promise(resolve => this.watcher.once('ready', resolve));
+      }
       this.watcher.on('change', this.onChange.bind(this));
     }
 
@@ -495,7 +499,7 @@ class Bundler extends EventEmitter {
     asset.processed = true;
 
     // First try the cache, otherwise load and compile in the background
-    let startTime = Date.now();
+    asset.startTime = Date.now();
     let processed = this.cache && (await this.cache.read(asset.name));
     let cacheMiss = false;
     if (!processed || asset.shouldInvalidate(processed.cacheData)) {
@@ -503,7 +507,8 @@ class Bundler extends EventEmitter {
       cacheMiss = true;
     }
 
-    asset.buildTime = Date.now() - startTime;
+    asset.endTime = Date.now();
+    asset.buildTime = asset.endTime - asset.startTime;
     asset.generated = processed.generated;
     asset.hash = processed.hash;
 
