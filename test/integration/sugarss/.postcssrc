@@ -1,0 +1,7 @@
+{
+  "modules": true,
+  "parser": "sugarss"
+  "plugins": {
+
+  }
+}
