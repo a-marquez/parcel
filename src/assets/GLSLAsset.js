@@ -2,7 +2,6 @@ const Asset = require('../Asset');
 const localRequire = require('../utils/localRequire');
 const path = require('path');
 const promisify = require('../utils/promisify');
-const Resolver = require('../Resolver');
 
 class GLSLAsset extends Asset {
   constructor(name, options) {
@@ -13,20 +12,13 @@ class GLSLAsset extends Asset {
   async parse() {
     const glslifyDeps = await localRequire('glslify-deps', this.name);
 
-    // Use the Parcel resolver rather than the default glslify one.
-    // This adds support for parcel features like alises, and tilde paths.
-    const resolver = new Resolver({
-      extensions: ['.glsl', '.vert', '.frag'],
-      rootDir: this.options.rootDir
-    });
-
     // Parse and collect dependencies with glslify-deps
     let cwd = path.dirname(this.name);
     let depper = glslifyDeps({
       cwd,
       resolve: async (target, opts, next) => {
         try {
-          let res = await resolver.resolve(
+          let res = await this.resolver.resolve(
             target,
             path.join(opts.basedir, 'index')
           );

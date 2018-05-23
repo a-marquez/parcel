@@ -1,7 +1,6 @@
 // const CSSAsset = require('./CSSAsset');
 const Asset = require('../Asset');
 const localRequire = require('../utils/localRequire');
-const Resolver = require('../Resolver');
 const syncPromise = require('../utils/syncPromise');
 
 const URL_RE = /^(?:url\s*\(\s*)?['"]?(?:[#/]|(?:https?:)?\/\/)/i;
@@ -56,11 +55,6 @@ async function createEvaluator(asset) {
     asset.name
   );
   const utils = await localRequire('stylus/lib/utils', asset.name);
-  const resolver = new Resolver(
-    Object.assign({}, asset.options, {
-      extensions: ['.styl', '.css']
-    })
-  );
 
   // This is a custom stylus evaluator that extends stylus with support for the node
   // require resolution algorithm. It also adds all dependencies to the parcel asset
@@ -75,7 +69,7 @@ async function createEvaluator(asset) {
           // This allows stylus files in node_modules to be resolved properly.
           // If we find something, update the AST so stylus gets the absolute path to load later.
           node.string = syncPromise(
-            resolver.resolve(path, imported.filename)
+            asset.resolver.resolve(path, imported.filename)
           ).path;
           asset.addDependency(node.string, {includedInParent: true});
         } catch (err) {

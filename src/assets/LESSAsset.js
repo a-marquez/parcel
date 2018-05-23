@@ -1,7 +1,6 @@
 const Asset = require('../Asset');
 const localRequire = require('../utils/localRequire');
 const promisify = require('../utils/promisify');
-const Resolver = require('../Resolver');
 const syncPromise = require('../utils/syncPromise');
 const fs = require('../utils/fs');
 const path = require('path');
@@ -59,18 +58,13 @@ function urlPlugin(asset) {
       visitor.run = visitor.visit;
       pluginManager.addVisitor(visitor);
 
-      let LessFileManager = getFileManager(less, asset.options);
+      let LessFileManager = getFileManager(less, asset.options, asset.resolver);
       pluginManager.addFileManager(new LessFileManager());
     }
   };
 }
 
-function getFileManager(less, options) {
-  const resolver = new Resolver({
-    extensions: ['.css', '.less'],
-    rootDir: options.rootDir
-  });
-
+function getFileManager(less, options, resolver) {
   class LessFileManager extends less.FileManager {
     async resolve(filename, currentDirectory) {
       return (await resolver.resolve(
